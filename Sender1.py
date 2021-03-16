@@ -12,8 +12,8 @@ class Sender:
         self.EOF = (0).to_bytes(1, 'big')
         self.bufferSize = 1024
 
-    def increment_seq(seq_bytes):
-        return (int.from_bytes(seq_bytes, 'big') + 1).to_bytes(2, 'big')
+    def increment_seq(self):
+        return (int.from_bytes(self.sequenceNumber, 'big') + 1).to_bytes(2, 'big')
 
     def form_image_bytes(self):
         img_byte_arr = []
@@ -45,11 +45,12 @@ class Sender:
 
         time.sleep(0.025)
 
-        self.sequenceNumber = self.increment_seq(self.sequenceNumber)
+        self.sequenceNumber = sender.increment_seq()
 
-        if len(img_byte_next) < self.bufferSize and len(img_byte_next) != 0:
-            print("eof! ")
-            self.EOF = (1).to_bytes(1, 'big')
+        if self.EOF != (1).to_bytes(1, 'big'):
+            if len(img_byte_next) < self.bufferSize and len(img_byte_next) != 0:
+                print("eof! ")
+                self.EOF = (1).to_bytes(1, 'big')
 
     def BasicFramework(self):
         client_socket = socket(AF_INET, SOCK_DGRAM)
@@ -58,7 +59,10 @@ class Sender:
         counter = 0
 
         while img_byte_arr:
-            sender.send(client_socket, img_byte_arr[counter], img_byte_arr[counter + 1])
+            if self.EOF == (0).to_bytes(1, 'big'):
+                sender.send(client_socket, img_byte_arr[counter], img_byte_arr[counter + 1])
+            else:
+                sender.send(client_socket, img_byte_arr[counter], None)
             counter += 1
         print("CLIENT SENT: ", counter, " PACKETS")
         client_socket.close()
@@ -66,3 +70,4 @@ class Sender:
 
 if __name__ == "__main__":
     sender = Sender()
+    sender.BasicFramework()

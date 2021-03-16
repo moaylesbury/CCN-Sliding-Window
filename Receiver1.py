@@ -40,7 +40,7 @@ class Receiver:
         counter = 0
         data = None
         while not self.EOF:
-            data = self.Receive(self, server_socket, data)
+            data = receiver.Receive(server_socket, data)
         print("HOST RECVD: ", counter, " PACKETS")
         f = open(self.fileName, "w+b")
         f.write(bytearray(data))
@@ -49,7 +49,8 @@ class Receiver:
         server_socket.close()
 
 if __name__ == "__main__":
-    Receiver()
+    receiver = Receiver()
+    receiver.BasicFramework()
 
 
 
