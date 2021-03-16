@@ -33,9 +33,13 @@ class Sender:
         image.close()
         return img_byte_arr
 
-    def send(self, client_socket, img_byte, img_byte_next):
+    def send(self, client_socket, img_byte):
         # creating header   /// seq num (two bytes) // EOF (one byte)
         # adding header to form image packet
+
+        if len(img_byte) < self.bufferSize and len(img_byte) != 0:
+            print("eof! ")
+            self.EOF = (1).to_bytes(1, 'big')
 
         packet = bytearray(self.sequenceNumber + self.EOF) + img_byte
 
@@ -47,22 +51,18 @@ class Sender:
 
         self.sequenceNumber = sender.increment_seq()
 
-        if self.EOF != (1).to_bytes(1, 'big'):
-            if len(img_byte_next) < self.bufferSize and len(img_byte_next) != 0:
-                print("eof! ")
-                self.EOF = (1).to_bytes(1, 'big')
+
 
     def BasicFramework(self):
         client_socket = socket(AF_INET, SOCK_DGRAM)
         img_byte_arr = sender.form_image_bytes()
-
+        # print("LEN: ", len(img_byte_arr))
         counter = 0
+        # print("index 879: ", img_byte_arr[878])
 
-        while img_byte_arr:
-            if self.EOF == (0).to_bytes(1, 'big'):
-                sender.send(client_socket, img_byte_arr[counter], img_byte_arr[counter + 1])
-            else:
-                sender.send(client_socket, img_byte_arr[counter], None)
+        while self.EOF == (0).to_bytes(1, 'big'):
+            print(counter)
+            sender.send(client_socket, img_byte_arr[counter])
             counter += 1
         print("CLIENT SENT: ", counter, " PACKETS")
         client_socket.close()
