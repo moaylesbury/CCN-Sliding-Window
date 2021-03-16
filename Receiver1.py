@@ -6,45 +6,50 @@ class Receiver:
     def __init__(self):
         self.serverPort = sys.argv[1]
         self.fileName = sys.argv[2]
+        self.firstBits = True
+        self.EOF = False
+        self.sequence_number = None
+        self.clientAddress = None
 
-    def Receive(self):
-        serverSocket = socket(AF_INET, SOCK_DGRAM)
-        serverSocket.bind(("", int(self.serverPort)))
+    def Receive(self, server_socket, data):
+
+        packet, self.clientAddress = server_socket.recvfrom(4000)  # change to 1027?
+
+        # breaking down packet
+        self.sequence_number = packet[0:2]
+        eof = packet[2:3]
+        imageBytes = packet[3:len(packet)]
+
+        if self.firstBits:
+            data = imageBytes
+            self.firstBits = False
+        else:
+            data = data + imageBytes
+
+        if int.from_bytes(eof, 'big') == 1:
+            self.EOF = True
+
+        return data
+
+    def BasicFramework(self):
+        server_socket = socket(AF_INET, SOCK_DGRAM)
+        server_socket.bind(("", int(self.serverPort)))
+
         print("The server is ready to recieve")
 
-        firstBits = True
-        EOF = False
-
         counter = 0
-
-        while not EOF:
-
-            packet, clientAddress = serverSocket.recvfrom(4000)  # change to 1027?
-
-            counter += 1
-
-            sequenceNumber = packet[0:2]
-            eof = packet[2:3]
-            imageBytes = packet[3:len(packet)]
-
-            if firstBits:
-                data = imageBytes
-                firstBits = False
-            else:
-                data = data + imageBytes
-            print(int.from_bytes(eof, 'big'), " ", counter)
-
-            if int.from_bytes(eof, 'big') == 1:
-                print("END ", counter)
-                EOF = True
-
+        data = None
+        while not self.EOF:
+            data = self.Receive(self, server_socket, data)
         print("HOST RECVD: ", counter, " PACKETS")
         f = open(self.fileName, "w+b")
         f.write(bytearray(data))
 
         f.close()
-        serverSocket.close()
-
+        server_socket.close()
 
 if __name__ == "__main__":
     Receiver()
+
+
+
