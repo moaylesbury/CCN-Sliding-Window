@@ -8,7 +8,6 @@ class Receiver:
         self.fileName = sys.argv[2]
         self.firstBits = True
         self.EOF = False
-        self.sequence_number = None
         self.clientAddress = None
 
     def Receive(self, server_socket, data):
@@ -16,7 +15,7 @@ class Receiver:
         packet, self.clientAddress = server_socket.recvfrom(4000)  # change to 1027?
 
         # breaking down packet
-        self.sequence_number = packet[0:2]
+        sequence_number = packet[0:2]
         eof = packet[2:3]
         imageBytes = packet[3:len(packet)]
 
@@ -29,7 +28,7 @@ class Receiver:
         if int.from_bytes(eof, 'big') == 1:
             self.EOF = True
 
-        return data
+        return data, sequence_number
 
     def BasicFramework(self):
         server_socket = socket(AF_INET, SOCK_DGRAM)
@@ -40,7 +39,7 @@ class Receiver:
         counter = 0
         data = None
         while not self.EOF:
-            data = receiver.Receive(server_socket, data)
+            data, sequence_number = receiver.Receive(server_socket, data)
         print("HOST RECVD: ", counter, " PACKETS")
         f = open(self.fileName, "w+b")
         f.write(bytearray(data))

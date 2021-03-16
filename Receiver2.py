@@ -16,15 +16,35 @@ class Receiver2(Receiver):
     def StopAndWait(self):
         server_socket = socket(AF_INET, SOCK_DGRAM)
         server_socket.bind(("", int(self.serverPort)))
+        sequence_numbers = []
 
         print("The server is ready to receive")
 
         counter = 0
         data = None
         while not self.EOF:
-            data = self.Receive(server_socket, data)
+
+            # receive packet and extract data and sequence number
+            data, sequence_number = self.Receive(server_socket, data)
             self.SendAck(server_socket)
+
+            # TODO: make receive1 not add data straight away, as we need to check for duplicates
+
+            # check not a duplicate
+            if sequence_number not in sequence_numbers:
+                addData()
+                sequence_numbers.append(sequence_number)
+            else:
+                # if a duplicate do nothing and wait for retransmit....? that doesnt sound right
+                pass
+
+
+
+
         print("HOST RECVD: ", counter, " PACKETS")
+
+
+        # write to file        TODO: does this need to be a separate function
         f = open(self.fileName, "w+b")
         f.write(bytearray(data))
 
