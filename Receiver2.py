@@ -16,29 +16,35 @@ class Receiver2(Receiver):
     def StopAndWait(self):
         server_socket = socket(AF_INET, SOCK_DGRAM)
         server_socket.bind(("", int(self.serverPort)))
-        sequence_numbers = []
 
         print("The server is ready to receive")
 
+        # State 0
         counter = 0
         data = None
+        state = 0            # denote s
+        opposite_state = 1   # denote o
+        temp = 0
+
         while not self.EOF:
 
             # receive packet and extract data and sequence number
-            data, sequence_number = self.Receive(server_socket, data)
-            self.SendAck(server_socket)
+            img_bytes, sequence_number = receiver2.Receive(server_socket, data)
 
-            # TODO: make receive1 not add data straight away, as we need to check for duplicates
+            # s -> s: receive packet with sequence number o
+            # send ack with sequence number o
+            receiver2.SendAck(server_socket, no=opposite_state)
 
-            # check not a duplicate
-            if sequence_number not in sequence_numbers:
-                addData()
-                sequence_numbers.append(sequence_number)
-            else:
-                # if a duplicate do nothing and wait for retransmit....? that doesnt sound right
-                pass
+            # s -> o: receive packet with sequence number s
+            # append data
+            Receiver.append_data(data, img_bytes)
+            # send ack with sequence number s
+            receiver2.SendAck(server_socket, no=state)
 
-
+            # move to state o
+            temp = state
+            state = opposite_state
+            opposite_state = temp
 
 
         print("HOST RECVD: ", counter, " PACKETS")
@@ -53,4 +59,4 @@ class Receiver2(Receiver):
 
 
 if __name__ == "__main__":
-    Receiver2()
+    receiver2 = Receiver2()
