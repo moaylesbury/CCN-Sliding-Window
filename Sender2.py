@@ -24,10 +24,10 @@ class Sender2(Sender):
 
 
         if ack_pack is None:
-            return None
+            return None, True
         else:
             seq_num = ack_pack[0:2]
-            return seq_num
+            return seq_num, False       # as timed out
 
     def StopAndWait(self):
         client_socket = socket(AF_INET, SOCK_DGRAM)
@@ -64,7 +64,7 @@ class Sender2(Sender):
 
             ack_seq_num = None
             # loop until an ack is received or timer times out
-            while ack_seq_num is None and not timeout:
+            while ack_seq_num is None and not timeout: # TODO: make this integrate better with RcvAck
                 time_elapsed = time.time() - t0
                 print("waiting")
 
@@ -75,7 +75,7 @@ class Sender2(Sender):
 
                 print("Time Elapsed: ", time_elapsed)
 
-                ack_seq_num = sender2.ReceiveAck(client_socket, timeout_time)  # TODO: may need to catch socket error and return None
+                ack_seq_num, timeout = sender2.ReceiveAck(client_socket, timeout_time)  # TODO: may need to catch socket error and return None
 
 
 
@@ -83,9 +83,15 @@ class Sender2(Sender):
             print("timeout: ", timeout)
             # if timeout resent
             if timeout:
+                print("+++++++++++++++++++++++")
+                print("     retransmitted     ")
+                print("+++++++++++++++++++++++")
                 pass
             else:
                 if ack_seq_num == 1:
+                    print("+++++++++++++++++++++++")
+                    print("     retransmitted     ")
+                    print("+++++++++++++++++++++++")
                     pass
                 else:
                     time_elapsed = time.time() - t0  # successful, change seqno
