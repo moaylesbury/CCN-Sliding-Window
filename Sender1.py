@@ -49,7 +49,7 @@ class Sender:
 
         time.sleep(0.025)
 
-        self.sequenceNumber = sender.increment_seq()
+        self.sequenceNumber = self.increment_seq()
 
 
 

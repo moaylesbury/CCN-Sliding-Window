@@ -1,17 +1,21 @@
 from Receiver1 import Receiver
 from socket import *
 
+def increment_seq_no(s):
+    return 0 if s == 1 else 1
 
 # extending Receiver
 class Receiver2(Receiver):
     def __init__(self):
         super(Receiver2, self).__init__()
 
-    def SendAck(self, server_socket):
+    def SendAck(self, server_socket, state):
         # forming ack packet, 2 bytes containing sequence number
-        ack_pack = self.sequence_number.to_bytes(2, 'big')  # does this have to be a byte arr?
+        ack_pack = state.to_bytes(2, 'big')  # does this have to be a byte arr?
         # make sure not none
-        server_socket.sendto(ack_pack, (self.client_address, int(self.serverPort)))
+        # server_socket.sendto(ack_pack, (self.clientAddress[0], int(self.serverPort)))
+        server_socket.sendto(ack_pack, self.clientAddress)
+        print(self.serverPort)
 
     def StopAndWait(self):
         server_socket = socket(AF_INET, SOCK_DGRAM)
@@ -19,32 +23,30 @@ class Receiver2(Receiver):
 
         print("The server is ready to receive")
 
-        # State 0
         counter = 0
         data = None
-        state = 0            # denote s
-        opposite_state = 1   # denote o
-        temp = 0
+        seq_no = 0
 
-        while not self.EOF:
+        # while not self.EOF:
+        while True:
+            img_bytes = None
 
             # receive packet and extract data and sequence number
-            img_bytes, sequence_number = receiver2.Receive(server_socket, data)
+            while img_bytes is None:
 
-            # s -> s: receive packet with sequence number o
-            # send ack with sequence number o
-            receiver2.SendAck(server_socket, no=opposite_state)
+                img_bytes, sequence_number = receiver2.Receive(server_socket)
 
-            # s -> o: receive packet with sequence number s
-            # append data
-            Receiver.append_data(data, img_bytes)
-            # send ack with sequence number s
-            receiver2.SendAck(server_socket, no=state)
 
-            # move to state o
-            temp = state
-            state = opposite_state
-            opposite_state = temp
+            # if the sequence number is not correct, send ack for the opposite
+            if seq_no == int.from_bytes(sequence_number, "big"):
+                data = receiver2.append_data(data, img_bytes)
+                receiver2.SendAck(server_socket, seq_no)
+                seq_no = increment_seq_no(seq_no)
+                print("correct packet")
+            else:
+                receiver2.SendAck(server_socket, increment_seq_no(seq_no))
+
+
 
 
         print("HOST RECVD: ", counter, " PACKETS")
@@ -60,3 +62,4 @@ class Receiver2(Receiver):
 
 if __name__ == "__main__":
     receiver2 = Receiver2()
+    receiver2.StopAndWait()

@@ -12,43 +12,77 @@ class Sender2(Sender):
         super(Sender2, self).__init__()
 
     def ReceiveAck(self, client_socket):
+        print("starting to receive")
         ack_pack, server_address = client_socket.recvfrom(4000)
         seq_num = ack_pack[0:2]
+        print("got from: ", server_address)
         return seq_num
 
     def StopAndWait(self):
         client_socket = socket(AF_INET, SOCK_DGRAM)
-        img_byte_arr = Sender.form_image_bytes(self)
+
+        img_byte_arr = sender2.form_image_bytes()
+
         time_elapsed = 0
         timeout_time = 0.02  # starting with 2xRTT=2x10ms=20ms
-        seq_no = 0
 
-        while not self.EOF:
-            opposite_state = 0
+        seq_no = 0
+        ack_seq_no = None
+        counter = 0
+        print("test")
+        eof = False
+
+        while not eof:
+            print(self.EOF)
+            print(counter)
+            print("inside loop")
+
             timeout = False
 
-            while not self.EOF:
 
-                # send packet and start timer
-                sender2.Sender.send(client_socket, img_byte_arr[seq_no])
-                t0 = time.time()
 
-                # loop until an ack is received or timer times out
-                while seq_num is None and time.time() - t0 < timeout_time:
-                    seq_num = sender2.ReceiveAck(client_socket)  # may need to catch socket error and return None
+            # send packet and start timer
+            self.sequenceNumber = seq_no.to_bytes(2, 'big')
 
-                    if time.time() - t0 >= timeout_time:
-                        timeout = True
+            print("packet sent")
 
-                # if timeout resent
-                if timeout:
+            sender2.send(client_socket, img_byte_arr[counter])
+
+            t0 = time.time()
+
+            ack_seq_num = None
+            # loop until an ack is received or timer times out
+            while ack_seq_num is None and not timeout:
+                print("waiting")
+
+                if time.time() - t0 >= timeout_time:
+                    print("timeout")
+                    timeout = True
+                    break
+
+                print("now just the receive")
+                ack_seq_num = sender2.ReceiveAck(client_socket)  # TODO: may need to catch socket error and return None
+
+
+
+                print(ack_seq_num, timeout, time.time()-t0)
+            print("timeout: ", timeout)
+            # if timeout resent
+            if timeout:
+                pass
+            else:
+                if ack_seq_num == 1:
                     pass
                 else:
-                    if seq_num == 1:
-                        pass
-                    else:
-                        time_elapsed = time.time() - t0 #successful, change seqno
-                        seq_no = increment_seq_no(seq_no)
+                    time_elapsed = time.time() - t0  # successful, change seqno
+                    seq_no = increment_seq_no(seq_no)
+                    counter += 1
+
+            if self.EOF == (1).to_bytes(1, 'big'):
+                eof = True
+
+
+        client_socket.close()
 
 
 
