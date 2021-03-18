@@ -26,9 +26,9 @@ class Receiver2(Receiver):
         counter = 0
         data = None
         seq_no = 0
-
-        # while not self.EOF:
-        while True:
+        self.EOF = (0).to_bytes(1, "big")
+        # while not self.EOF:v
+        while self.EOF == (0).to_bytes(1, "big"):
             img_bytes = None
 
             # receive packet and extract data and sequence number

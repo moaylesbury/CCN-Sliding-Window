@@ -1,6 +1,7 @@
 from Sender1 import Sender
 from socket import *
 import time
+import select
 
 # extending Sender
 def increment_seq_no(s):
@@ -11,12 +12,22 @@ class Sender2(Sender):
     def __init__(self):
         super(Sender2, self).__init__()
 
-    def ReceiveAck(self, client_socket):
+    def ReceiveAck(self, client_socket, timeout_time):
         print("starting to receive")
-        ack_pack, server_address = client_socket.recvfrom(4000)
-        seq_num = ack_pack[0:2]
-        print("got from: ", server_address)
-        return seq_num
+
+        ready = select.select([client_socket], [], [], timeout_time)
+
+        ack_pack = None
+
+        if ready[0]:
+            ack_pack, server_address = client_socket.recvfrom(4000)
+
+
+        if ack_pack is None:
+            return None
+        else:
+            seq_num = ack_pack[0:2]
+            return seq_num
 
     def StopAndWait(self):
         client_socket = socket(AF_INET, SOCK_DGRAM)
@@ -29,17 +40,18 @@ class Sender2(Sender):
         seq_no = 0
         ack_seq_no = None
         counter = 0
-        print("test")
         eof = False
 
         while not eof:
-            print(self.EOF)
-            print(counter)
-            print("inside loop")
+            print("EOF: ", self.EOF)
+
 
             timeout = False
 
-
+            print("=======================")
+            print("COUNT:")
+            print(counter)
+            print("=======================")
 
             # send packet and start timer
             self.sequenceNumber = seq_no.to_bytes(2, 'big')
@@ -53,15 +65,17 @@ class Sender2(Sender):
             ack_seq_num = None
             # loop until an ack is received or timer times out
             while ack_seq_num is None and not timeout:
+                time_elapsed = time.time() - t0
                 print("waiting")
 
-                if time.time() - t0 >= timeout_time:
+                if time_elapsed >= timeout_time:
                     print("timeout")
                     timeout = True
                     break
 
-                print("now just the receive")
-                ack_seq_num = sender2.ReceiveAck(client_socket)  # TODO: may need to catch socket error and return None
+                print("Time Elapsed: ", time_elapsed)
+
+                ack_seq_num = sender2.ReceiveAck(client_socket, timeout_time)  # TODO: may need to catch socket error and return None
 
 
 
