@@ -13,7 +13,7 @@ class Sender2(Sender):
         super(Sender2, self).__init__()
 
     def ReceiveAck(self, client_socket, timeout_time):
-        print("starting to receive")
+
 
         ready = select.select([client_socket], [], [], timeout_time)
 

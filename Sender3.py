@@ -35,22 +35,33 @@ class Sender3(Sender2):
 
 
         while not eof:
+            print("sequence number: ", next_seq_no)
+            print("base number    : ", base)
 
             if next_seq_no < base + self.window_size:   # TODO: remember to modulo
                 self.sequenceNumber = next_seq_no.to_bytes(2, 'big')
-                sender3.send(client_socket, img_byte_arr[counter])
+                sender3.send(client_socket, img_byte_arr[next_seq_no])
+                if base == next_seq_no:
+                    t0 = time.time()
                 next_seq_no += 1
+
+            print("recv test")
+            try:
+                ack_pack, server_address = client_socket.recvfrom(4000)
+                print(ack_pack)
+            except:
+                print("testttttttt fail")
+
 
             ack_seq_no, not_received = sender3.ReceiveAck(client_socket=client_socket, timeout_time=0.01)  # checks to see if any acks present
 
             if time.time() - t0 >= self.retry_timeout:  # TODO: if time expires resend entire window
-                received = False
+                print("++++timeout++++")
                 t0 = time.time()
                 next_seq_no = base
-
-            if not not_received:
+            elif not not_received:
                 ack_seq_no = int.from_bytes(ack_seq_no, 'big')
-                print("received ack")
+                print("received ACK ", ack_seq_no)
                 base = ack_seq_no + 1     #TODO: make sure this is the right number
                 if base == next_seq_no:
                     pass

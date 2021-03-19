@@ -15,9 +15,9 @@ class Receiver3(Receiver2):
 
         expected_seq_no = 0
         data = None
-
-        while True:
-
+        self.EOF = (0).to_bytes(1, "big")
+        while self.EOF == (0).to_bytes(1, "big"):
+            print(expected_seq_no)
 
 
             img_bytes, seq_no = receiver3.Receive(server_socket)
