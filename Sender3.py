@@ -29,34 +29,32 @@ class Sender3(Sender):
 
 
 
+        base = 0
+        next_seq_no = 0
+
+
         while not eof:
 
-            if seq_no != end_of_window:
-                self.sequenceNumber = seq_no
+            if next_seq_no < base + self.window_size:   # TODO: remember to modulo
+                self.sequenceNumber = next_seq_no
                 sender3.send(client_socket, img_byte_arr[counter])
-                counter += 1
+                next_seq_no += 1
 
-            ack_seq_no, received = Sender2.ReceiveAck(client_socket, 0.01) # checks to see if any acks present
-
-            if received:
-                window_first_seq_no += 1
-                t0 = time.time()
+            ack_seq_no, received = Sender2.ReceiveAck(client_socket, 0.01)  # checks to see if any acks present
 
             if time.time() - t0 >= self.retry_timeout:  # TODO: if time expires resend entire window
+                received = False
                 t0 = time.time()
-                seq_no = window_first_seq_no
-                counter = window_first_seq_no
+                next_seq_no = base
 
-            # if seq_no == end_of_window:
-            #     # ack must be received for seq_no - end
+            if received:
+                base = ack_seq_no + 1     #TODO: make sure this is the right number
+                if base == next_seq_no:
+                    stop timer
+                else:
+                    t0 = time.time()
 
-
-            seq_no = sender3.increment_seq_no(seq_no)
-            end_of_window =  seq_no + self.window_size
-
-
-
-            if self.EOF == (1).to_bytes(1, 'big'):
+            if self.EOF == (1).to_bytes(1, 'big'):  # TODO: can only end if this is acknowledged
                 eof = True
 
 if __name__ == "__main__":
