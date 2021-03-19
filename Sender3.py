@@ -5,11 +5,11 @@ import sys
 import time
 
 
-class Sender3(Sender):
+class Sender3(Sender2):
     def __init__(self):
         super(Sender3, self).__init__()
-        self.retry_timeout = sys.argv[4]
-        self.window_size = sys.argv[5]
+        self.retry_timeout = float(sys.argv[4])
+        self.window_size = int(sys.argv[5])
 
     def increment_seq_no(self, seq_no):
         return (seq_no + 1) % self.window_size
@@ -31,26 +31,29 @@ class Sender3(Sender):
 
         base = 0
         next_seq_no = 0
+        t0 = 0
 
 
         while not eof:
 
             if next_seq_no < base + self.window_size:   # TODO: remember to modulo
-                self.sequenceNumber = next_seq_no
+                self.sequenceNumber = next_seq_no.to_bytes(2, 'big')
                 sender3.send(client_socket, img_byte_arr[counter])
                 next_seq_no += 1
 
-            ack_seq_no, received = Sender2.ReceiveAck(client_socket, 0.01)  # checks to see if any acks present
+            ack_seq_no, not_received = sender3.ReceiveAck(client_socket=client_socket, timeout_time=0.01)  # checks to see if any acks present
 
             if time.time() - t0 >= self.retry_timeout:  # TODO: if time expires resend entire window
                 received = False
                 t0 = time.time()
                 next_seq_no = base
 
-            if received:
+            if not not_received:
+                ack_seq_no = int.from_bytes(ack_seq_no, 'big')
+                print("received ack")
                 base = ack_seq_no + 1     #TODO: make sure this is the right number
                 if base == next_seq_no:
-                    stop timer
+                    pass
                 else:
                     t0 = time.time()
 
@@ -59,3 +62,4 @@ class Sender3(Sender):
 
 if __name__ == "__main__":
     sender3 = Sender3()
+    sender3.GoBackN()
