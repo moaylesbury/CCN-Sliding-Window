@@ -47,6 +47,12 @@ class Sender3(Sender2):
                     t0 = time.time()
                 next_seq_no += 1
 
+            if time.time() - t0 >= self.retry_timeout:  # TODO: if time expires resend entire window
+                print("++++timeout++++")
+                t0 = time.time()
+                next_seq_no = base
+                received = False
+
             print("recv::")
             # ack_seq_no, not_received = sender3.ReceiveAck(client_socket, 0.001)  # checks to see if any acks present
             try:
@@ -61,12 +67,8 @@ class Sender3(Sender2):
 
             print("done")
             print("b")
-            if time.time() - t0 >= self.retry_timeout:  # TODO: if time expires resend entire window
-                print("++++timeout++++")
-                t0 = time.time()
-                next_seq_no = base
-                received = False
-            elif received:
+
+            if received:
                 print("c")
                 ack_seq_no = int.from_bytes(ack_seq_no, 'big')
                 print("received ACK ", ack_seq_no)
