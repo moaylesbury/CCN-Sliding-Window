@@ -18,7 +18,7 @@ class Sender2(Sender):
         ready = select.select([client_socket], [], [], timeout_time)
 
         ack_pack = None
-
+        print(ready)
         if ready[0]:
             ack_pack, server_address = client_socket.recvfrom(4000)
 

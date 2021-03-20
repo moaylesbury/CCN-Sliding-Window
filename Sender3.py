@@ -38,6 +38,7 @@ class Sender3(Sender2):
             print("sequence number: ", next_seq_no)
             print("base number    : ", base)
 
+            print("a")
             if next_seq_no < base + self.window_size:   # TODO: remember to modulo
                 self.sequenceNumber = next_seq_no.to_bytes(2, 'big')
                 sender3.send(client_socket, img_byte_arr[next_seq_no])
@@ -45,21 +46,16 @@ class Sender3(Sender2):
                     t0 = time.time()
                 next_seq_no += 1
 
-            print("recv test")
-            try:
-                ack_pack, server_address = client_socket.recvfrom(4000)
-                print(ack_pack)
-            except:
-                print("testttttttt fail")
-
-
-            ack_seq_no, not_received = sender3.ReceiveAck(client_socket=client_socket, timeout_time=0.01)  # checks to see if any acks present
-
+            print("recv::")
+            ack_seq_no, not_received = sender3.ReceiveAck(client_socket, 0.001)  # checks to see if any acks present
+            print("done")
+            print("b")
             if time.time() - t0 >= self.retry_timeout:  # TODO: if time expires resend entire window
                 print("++++timeout++++")
                 t0 = time.time()
                 next_seq_no = base
             elif not not_received:
+                print("c")
                 ack_seq_no = int.from_bytes(ack_seq_no, 'big')
                 print("received ACK ", ack_seq_no)
                 base = ack_seq_no + 1     #TODO: make sure this is the right number
@@ -67,7 +63,7 @@ class Sender3(Sender2):
                     pass
                 else:
                     t0 = time.time()
-
+            print("d")
             if self.EOF == (1).to_bytes(1, 'big'):  # TODO: can only end if this is acknowledged
                 eof = True
 
