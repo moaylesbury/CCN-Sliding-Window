@@ -4,11 +4,10 @@ from socket import *
 import sys
 import time
 
-
 class Sender3(Sender2):
     def __init__(self):
         super(Sender3, self).__init__()
-        self.retry_timeout = float(sys.argv[4])
+        self.retry_timeout = float(sys.argv[4])/1000    # milliseconds to seconds
         self.window_size = int(sys.argv[5])
 
     def increment_seq_no(self, seq_no):
@@ -16,7 +15,7 @@ class Sender3(Sender2):
 
     def GoBackN(self):
         client_socket = socket(AF_INET, SOCK_DGRAM)
-
+        client_socket.setblocking(False)
         img_byte_arr = sender3.form_image_bytes()
 
         eof = False
@@ -35,6 +34,8 @@ class Sender3(Sender2):
 
 
         while not eof:
+            received = False
+            ack_seq_no = 0
             print("sequence number: ", next_seq_no)
             print("base number    : ", base)
 
@@ -47,20 +48,31 @@ class Sender3(Sender2):
                 next_seq_no += 1
 
             print("recv::")
-            ack_seq_no, not_received = sender3.ReceiveAck(client_socket, 0.001)  # checks to see if any acks present
+            # ack_seq_no, not_received = sender3.ReceiveAck(client_socket, 0.001)  # checks to see if any acks present
+            try:
+                ack_pack, server_address = client_socket.recvfrom(4000)
+                ack_seq_no = ack_pack[0:2]
+                received = True
+                print("received")
+            except error:
+                received = False
+                print("error")
+                pass
+
             print("done")
             print("b")
             if time.time() - t0 >= self.retry_timeout:  # TODO: if time expires resend entire window
                 print("++++timeout++++")
                 t0 = time.time()
                 next_seq_no = base
-            elif not not_received:
+                received = False
+            elif received:
                 print("c")
                 ack_seq_no = int.from_bytes(ack_seq_no, 'big')
                 print("received ACK ", ack_seq_no)
                 base = ack_seq_no + 1     #TODO: make sure this is the right number
                 if base == next_seq_no:
-                    pass
+                    t0 = 0
                 else:
                     t0 = time.time()
             print("d")

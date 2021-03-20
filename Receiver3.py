@@ -17,7 +17,7 @@ class Receiver3(Receiver2):
         data = None
         self.EOF = (0).to_bytes(1, "big")
         while self.EOF == (0).to_bytes(1, "big"):
-            print(expected_seq_no)
+            print("expected seq no: ", expected_seq_no)
 
 
             img_bytes, seq_no = receiver3.Receive(server_socket)
@@ -29,8 +29,15 @@ class Receiver3(Receiver2):
                 receiver3.SendAck(server_socket, seq_no)
                 print("sent ack")
                 expected_seq_no += 1
+            else:
+                receiver3.SendAck(server_socket, expected_seq_no-1)
 
+        # write to file        TODO: does this need to be a separate function
+        f = open(self.fileName, "w+b")
+        f.write(bytearray(data))
 
+        f.close()
+        server_socket.close()
 
 
 
