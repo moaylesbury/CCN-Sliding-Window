@@ -1,7 +1,5 @@
-from Receiver1 import Receiver
 from Receiver2 import Receiver2
 from socket import *
-import sys
 
 class Receiver3(Receiver2):
     def __init__(self):
