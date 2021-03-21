@@ -7,7 +7,7 @@ import time
 class Sender3(Sender2):
     def __init__(self):
         super(Sender3, self).__init__()
-        self.retry_timeout = float(sys.argv[4])/1000    # milliseconds to seconds
+        self.retry_timeout = float(sys.argv[4])    # milliseconds to seconds
         self.window_size = int(sys.argv[5])
 
     def increment_seq_no(self, seq_no):

@@ -18,30 +18,40 @@ class Sender4(Sender3):
         t0 = 0
 
         counter = 0
-
+        temp = 0
+        received = False
         # initialise array
         timers = []
-        for i in self.window_size:
+        for i in range(self.window_size):
             timers.append(0)
-        print(timers)
 
         while not eof:
+            print("sequence number: ", next_seq_no)
+            print("base number    : ", base)
+            print("timers: ", timers)
+            print(self.retry_timeout)
+            print("a")
             if next_seq_no < base + self.window_size:   # TODO: remember to modulo
                 self.sequenceNumber = next_seq_no.to_bytes(2, 'big')
-                sender4.send(client_socket, img_byte_arr[next_seq_no])
-                if base == next_seq_no:
-                    timers[next_seq_no % self.window_size] = time.time()
+                sender4.send(client_socket, img_byte_arr[counter])
+                timers[next_seq_no % self.window_size] = time.time()
                 next_seq_no += 1
                 counter += 1
 
+            print("b")
+            temp = counter
             for t in range(len(timers)):
-                if time.time() - timers[t] >= self.retry_timeout:
+                print("normalised time: ", time.time() - timers[t])
+                if time.time() - timers[t] >= self.retry_timeout and timers[t] != 0:
+                    print("normalised time: ")
                     print("++++timeout++++")
                     timers[t] = time.time()
                     next_seq_no = base
-                    counter -= next_seq_no % self.window_size
+                    counter -= next_seq_no % self.window_size # TODO: reset counter after
                     sender4.send(client_socket, img_byte_arr[counter])
+            counter = temp
 
+            print("c")
             print("recv::")
             try:
                 ack_pack, server_address = client_socket.recvfrom(4000)
@@ -53,23 +63,22 @@ class Sender4(Sender3):
                 print("error")
                 pass
 
+            print("d")
             if received:
                 ack_seq_no = int.from_bytes(ack_seq_no, 'big')
                 print("received ACK ", ack_seq_no)
                 base = ack_seq_no + 1     #TODO: make sure this is the right number
-                if base == next_seq_no:
-                    timers[next_seq_no % self.window_size] = 0
-                else:
-                    timers[next_seq_no % self.window_size] = time.time()
+                timers[ack_seq_no % self.window_size] = 0
+
 
             # can only move on if all timers are stopped
-            acked = True
+            #acked = True
             ack_count = 0
-            while acked:
+            #while acked:
 
 
 
-            print("done")
+            print("e")
 
 
             if self.EOF == (1).to_bytes(1, 'big'):  # TODO: can only end if this is acknowledged
