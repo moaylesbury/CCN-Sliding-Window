@@ -14,7 +14,6 @@ class Receiver4(Receiver3):
         return buffer
 
     def SelectiveRepeat(self):
-        print(self.window_size)
         server_socket = socket(AF_INET, SOCK_DGRAM)
         server_socket.bind(("", int(self.serverPort)))
 
@@ -24,7 +23,6 @@ class Receiver4(Receiver3):
             buffer.append(0)
         #######
         base = 0
-        received_seq_no = []
 
         expected_seq_no = 0
         data = None
@@ -34,31 +32,34 @@ class Receiver4(Receiver3):
             print("base: ", base)
 
             img_bytes, seq_no = receiver4.Receive(server_socket)
-            print("received")
             seq_no = int.from_bytes(seq_no, 'big')
-            # TODO: check in window
-            if seq_no < base + self.window_size:
+
+            print("RECIEVED : : : ", seq_no)
+            if seq_no == expected_seq_no:
+                expected_seq_no += 1
+                print("Base increase as ", seq_no, " == ", expected_seq_no)
+                base += 1
+                data = receiver4.append_data(data, img_bytes)
+                receiver4.SendAck(server_socket, seq_no)
+                buffer = receiver4.shuffle_buffer(buffer)
+
+                shuffle_amount = 0
+                for b in range(1, self.window_size):
+                    if buffer[b] != 0:
+                        # print("base increase because")
+                        base += 1
+                        shuffle_amount += 1
+                        expected_seq_no += 1
+                        data = receiver4.append_data(data, img_bytes)
+                    else:
+                        break
+                for i in range(shuffle_amount):
+                    buffer = receiver4.shuffle_buffer(buffer)
+
+
+            elif seq_no < base + self.window_size:
                 buffer[seq_no % self.window_size] = img_bytes
-            # if seq_no not in received_seq_no:
-            #     received_seq_no.append(seq_no)
-            #     buffer.append(img_bytes)
-
-            receiver4.SendAck(server_socket, seq_no)
-
-            # dealing with buffer
-
-            shuffle_amount = base
-            for b in range(self.window_size):
-                if buffer[b] != 0:
-                    print("yea!!!!!!")
-                    base += 1
-                    data = receiver4.append_data(data, img_bytes)
-                else:
-                    print("BROKEN")
-                    break
-            shuffle_amount = base - shuffle_amount
-            for i in range(shuffle_amount):
-                buffer = receiver4.shuffle_buffer(buffer)  # TODO: shuffle buffer
+                receiver4.SendAck(server_socket, seq_no)
 
 
 
@@ -67,18 +68,7 @@ class Receiver4(Receiver3):
 
 
 
-            # if expected_seq_no in received_seq_no:
-            #
-            #     for i in range(len(buffer)):
-            #         print(i)
-            #         if received_seq_no[i] == expected_seq_no:
-            #             print("MATCHMATCH")
-            #             print(expected_seq_no)
-            #             expected_seq_no = (expected_seq_no + 1) % self.window_size
-            #             data = receiver4.append_data(data, img_bytes)
-            #             buffer.pop(i)
-            #             received_seq_no.pop(i)
-            #             break
+
 
 
 
@@ -94,6 +84,30 @@ class Receiver4(Receiver3):
 
 
 
+
+
 if __name__ == "__main__":
     receiver4 = Receiver4()
     receiver4.SelectiveRepeat()
+
+
+    # testing
+    # tester = [1,2,0,3,0]
+    # print("tester before: ", tester)
+    # shuffle_amount = 0
+    # base = 0
+    # for b in range(5):
+    #     if tester[b] != 0:
+    #         base += 1
+    #         shuffle_amount += 1
+    #     else:
+    #         break
+    # for i in range(shuffle_amount):
+    #     tester = receiver4.shuffle_buffer(tester)
+    # print("tester after: ", tester)
+    # print('base: ', base)
+    # print("shuffle amount: ", shuffle_amount)
+
+
+
+
