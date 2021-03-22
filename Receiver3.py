@@ -1,9 +1,11 @@
 from Receiver2 import Receiver2
 from socket import *
+import sys
 
 class Receiver3(Receiver2):
     def __init__(self):
         super(Receiver3, self).__init__()
+        self.window_size = int(sys.argv[3])
 
 
     def GoBackN(self):
