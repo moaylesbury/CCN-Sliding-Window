@@ -47,3 +47,81 @@ receive packet
 ---break
 -elsif seq_num between base and base + window size
 --add data to buffer
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+sequence number:  121
+base number    :  116
+
+
+
+
+next_seq_no - 1 - (self.window_size - t)
+
+If t = 0
+sqnno = 121 - 1 - (5-0) = 120 - 5 = 115 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

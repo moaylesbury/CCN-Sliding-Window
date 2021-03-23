@@ -10,16 +10,7 @@ class Sender4(Sender3):
     def shuffle_buffer(self, timers):
         for i in range(self.window_size):
             if i == self.window_size - 1:
-                timers[i] = 0
-            else:
-                timers[i] = timers[i + 1]
-        return timers
-
-    def shift_timers(self, timers):
-        for i in range(self.window_size):
-            print("got here")
-            if i == self.window_size - 1:
-                timers[i] = True
+                timers[i] = time.time()
             else:
                 timers[i] = timers[i + 1]
         return timers
@@ -112,44 +103,15 @@ class Sender4(Sender3):
                 print("=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-")
                 if ack_seq_no not in acks_received:
                     acks_received.append(ack_seq_no)
-                if ack_seq_no == next_seq_no - 1:
-                    base += 1
-                    timers = sender4.shuffle_buffer(timers) # stops timer
-                    for t in range(self.window_size):
-                        if timers[t] == 1:
-                            print("over here! ", timers)
-                            base += 1
-                            timers = sender4.shuffle_buffer(timers)
-                        else:
-                            break
-                elif base <= ack_seq_no < base + self.window_size:
-                    timers[ack_seq_no % self.window_size] = 1
 
-                print("received ACK ", ack_seq_no)
+                while base in acks_received:
+                    base += 1
+                    timers = sender4.shuffle_buffer(timers)
             except error:
                 pass
 
-            # check timers
-            # - if any timer has expired
-            # --resend packet with corresponding sequence number
-            # --start its timer
 
-            # print("oi oi ! ", next_seq_no, " and recvd ", ack_seq_no)
-            # if next_seq_no == ack_seq_no:
-            #     print("yes")
-            #     next_seq_no += 1
-            #     base += 1
-            #     shuffle_amount = 0
-            #     for t in range(self.window_size):
-            #         if timers[t] == 1:
-            #             base += 1
-            #             next_seq_no += 1
-            #             shuffle_amount += 1
-            #         else:
-            #             break
-            #     for i in range(shuffle_amount):
-            #         timers = sender4.shuffle_buffer(timers)
-            #
+
 
 
 

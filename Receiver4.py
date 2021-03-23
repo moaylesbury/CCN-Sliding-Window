@@ -24,7 +24,7 @@ class Receiver4(Receiver3):
         #######
         base = 0
 
-
+        seq_nos_received = []
 
         expected_seq_no = 0
         data = None
@@ -32,46 +32,25 @@ class Receiver4(Receiver3):
         while self.EOF == (0).to_bytes(1, "big"):
             print("expected seq no: ", expected_seq_no)
             print("base: ", base)
+            print("seq nos received: ", seq_nos_received)
 
             img_bytes, seq_no = receiver4.Receive(server_socket)
             seq_no = int.from_bytes(seq_no, 'big')
+            buffer[seq_no % self.window_size] = img_bytes
+            receiver4.SendAck(server_socket, seq_no)
+
+            if seq_no not in seq_nos_received:
+                seq_nos_received.append(seq_no)
+
             print("RECIEVED : : : ", seq_no)
 
-            # receive packet
-            # - if seq_num == expected_seq_num
-            # --extract data
-            # --base += 1
-            # --expected_seq_num += 1
-            # --shuffle buffer
-            # --loop through buffer
-            # --- if buffer != 0
-            # ---base += 1
-            # ---extract data
-            # ---shuffle buffer
-            # --else
-            # ---break
-            # -elsif seq_num between base and base + window size
-            # --add data to buffer
-            if seq_no == expected_seq_no:
-                print("--==--=-==-==--==-===-=-")
-                print("--==--=-==-==--==-===-=-")
-                print("--==--=-==-==--==-===-=-")
-                print("--==--=-==-==--==-===-=-")
-                data = receiver4.append_data(data, img_bytes)
+
+            while base in seq_nos_received:
                 base += 1
-                expected_seq_no += 1
-                receiver4.SendAck(server_socket, seq_no)
-                buffer = receiver4.shuffle_buffer(buffer)  # stops timer
-                for t in range(self.window_size):
-                    if buffer[t] != 0:
-                        print("over here! ", buffer)
-                        base += 1
-                        buffer = receiver4.shuffle_buffer(buffer)
-                    else:
-                        break
-            elif base <= seq_no < base + self.window_size:
-                buffer[seq_no % self.window_size] = img_bytes
-                receiver4.SendAck(server_socket, seq_no)
+                data = receiver4.append_data(data, img_bytes)
+                buffer = receiver4.shuffle_buffer(buffer)
+
+
 
 
 
