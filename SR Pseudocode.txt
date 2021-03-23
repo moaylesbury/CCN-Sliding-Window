@@ -1,0 +1,49 @@
+Lets figure this bad boi out u fanny
+
+
+Sender events
+
+send packet 
+-if between base and base + window size
+--send packet
+--increase next_seq_num
+--start timer
+-else
+--increase next_seq_num
+receive ack
+-if ack_seq_num == next_seq_num - 1
+--base += 1
+--shuffle timers
+--loop through timers
+---if timer = 1
+---base += 1
+---shuffle timers
+--else
+---break
+-elsif between base and base + window size
+--timer = 1
+check timers
+-if any timer has expired
+--resend packet with corresponding sequence number
+--start its timer
+
+
+
+
+
+Receiver events
+
+receive packet
+-if seq_num == expected_seq_num
+--extract data
+--base += 1
+--shuffle buffer
+--loop through buffer
+---if buffer != 0
+---base += 1
+---extract data
+---shuffle buffer
+--else
+---break
+-elsif seq_num between base and base + window size
+--add data to buffer
