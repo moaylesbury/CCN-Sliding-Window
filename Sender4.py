@@ -35,9 +35,9 @@ class Sender4(Sender3):
         ##
 
         counter = 0
-        timers = []
-        for i in range(self.window_size):
-            timers.append(0)
+        timers = {}
+        # for i in range(self.window_size):
+        #     timers.append(0)
 
         while not eof:
             print(timers)
@@ -56,22 +56,29 @@ class Sender4(Sender3):
             if base <= next_seq_no < base + self.window_size:   # TODO: remember to modulo
                 self.sequenceNumber = next_seq_no.to_bytes(2, 'big')
                 sender4.send(client_socket, img_byte_arr[next_seq_no])
-                timers[next_seq_no % self.window_size] = time.time()
+                timers[next_seq_no] = time.time()
                 next_seq_no += 1
 
             # check timers
             # - if any timer has expired
             # --resend packet with corresponding sequence number
             # --start its timer
-            for t in range(len(timers)):
-                if time.time() - timers[t] >= self.retry_timeout and timers[t] != 0:
-                    print("+++++timeout+++++")
-                    timers[t] = time.time()
-                    sender4.retrans_seq_no(t, next_seq_no) # changes sequence number
-                    sender4.send(client_socket, img_byte_arr[next_seq_no - 1 - (self.window_size - t)]) # -1?
-                    print("RESENT: ", int.from_bytes(self.sequenceNumber, "big"))
-                    resent.append(int.from_bytes(self.sequenceNumber, "big"))
-                    tpos.append(t)
+            print(len(timers))
+            print(timers)
+            for t in timers.keys():
+
+                if t >= base and t < base + self.window_size:
+                    if time.time() - timers[t] >= self.retry_timeout and timers[t] != 0:
+                        print("+++++timeout+++++")
+                        timers[t] = time.time()
+                        # sender4.retrans_seq_no(t, next_seq_no) # changes sequence number
+                        # sender4.send(client_socket, img_byte_arr[next_seq_no - 1 - (self.window_size - t)]) # -1?
+                        self.sequenceNumber = t.to_bytes(2, 'big')
+                        sender4.send(client_socket, img_byte_arr[t])
+                        print("RESENT: ", int.from_bytes(self.sequenceNumber, "big"))
+                        resent.append(int.from_bytes(self.sequenceNumber, "big"))
+                        tpos.append(t)
+
 
 
             try:
@@ -86,7 +93,6 @@ class Sender4(Sender3):
 
                 while base in acks_received:
                     base += 1
-                    timers = sender4.shuffle_buffer(timers)
             except error:
                 pass
 
@@ -100,10 +106,5 @@ class Sender4(Sender3):
 
 if __name__ == "__main__":
     sender4 = Sender4()
-    # sender4.SelectiveRepeat()
+    sender4.SelectiveRepeat()
     # sender4.retrans_seq_no()
-    base = 1
-    tester = {1: 11, 2: 22, 3: 33, 4: 44, 5: 55, 6: 66, 7 : 77}
-
-    for t in range(base, base+5):
-        print(tester[t])
