@@ -19,6 +19,7 @@ class Receiver4(Receiver3):
 
         # initialising buffer
         buffer = []
+        data_buffer = {}
         for i in range(self.window_size):
             buffer.append(0)
         #######
@@ -29,6 +30,7 @@ class Receiver4(Receiver3):
         expected_seq_no = 0
         data = None
         self.EOF = (0).to_bytes(1, "big")
+
         while self.EOF == (0).to_bytes(1, "big"):
             print("expected seq no: ", expected_seq_no)
             print("base: ", base)
@@ -37,6 +39,7 @@ class Receiver4(Receiver3):
             img_bytes, seq_no = receiver4.Receive(server_socket)
             seq_no = int.from_bytes(seq_no, 'big')
             buffer[seq_no % self.window_size] = img_bytes
+            data_buffer[seq_no] = img_bytes
             receiver4.SendAck(server_socket, seq_no)
 
             if seq_no not in seq_nos_received:
@@ -46,9 +49,9 @@ class Receiver4(Receiver3):
 
 
             while base in seq_nos_received:
-                base += 1
-                data = receiver4.append_data(data, img_bytes)
+                data = receiver4.append_data(data, data_buffer[base])
                 buffer = receiver4.shuffle_buffer(buffer)
+                base += 1
 
 
 

@@ -55,7 +55,7 @@ class Sender4(Sender3):
             # --start timer
             if base <= next_seq_no < base + self.window_size:   # TODO: remember to modulo
                 self.sequenceNumber = next_seq_no.to_bytes(2, 'big')
-                sender4.send(client_socket, img_byte_arr[counter])
+                sender4.send(client_socket, img_byte_arr[next_seq_no])
                 timers[next_seq_no % self.window_size] = time.time()
                 next_seq_no += 1
 
@@ -68,38 +68,18 @@ class Sender4(Sender3):
                     print("+++++timeout+++++")
                     timers[t] = time.time()
                     sender4.retrans_seq_no(t, next_seq_no) # changes sequence number
-                    sender4.send(client_socket, img_byte_arr[counter - (len(timers) - i)])
+                    sender4.send(client_socket, img_byte_arr[next_seq_no - 1 - (self.window_size - t)]) # -1?
                     print("RESENT: ", int.from_bytes(self.sequenceNumber, "big"))
                     resent.append(int.from_bytes(self.sequenceNumber, "big"))
                     tpos.append(t)
 
-            # receive ack
-            # - if ack_seq_num == next_seq_num - 1
-            # --base += 1
-            # --shuffle timers
-            # --loop through timers
-            # --- if timer = 1
-            # ---base += 1
-            # ---shuffle timers
-            # -- else
-            # ---break
-            # -elif between base and base + window size
-            # --timer = 1
-            print("dsagjalsdkhkasnhklasklhnadh")
-            print("dsagjalsdkhkasnhklasklhnadh")
-            print("dsagjalsdkhkasnhklasklhnadh")
-            print("dsagjalsdkhkasnhklasklhnadh")
-            print("dsagjalsdkhkasnhklasklhnadh")
+
             try:
                 ack_pack, server_address = client_socket.recvfrom(4000)
                 ack_seq_no = ack_pack[0:2]
                 ack_seq_no = int.from_bytes(ack_seq_no, 'big')
                 print("=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-")
-                print("=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-")
-                print("=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-")
                 print("ACK SQN: ", ack_seq_no, " NEXT SQN - 1: ", next_seq_no)
-                print("=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-")
-                print("=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-")
                 print("=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-")
                 if ack_seq_no not in acks_received:
                     acks_received.append(ack_seq_no)
@@ -120,5 +100,10 @@ class Sender4(Sender3):
 
 if __name__ == "__main__":
     sender4 = Sender4()
-    sender4.SelectiveRepeat()
+    # sender4.SelectiveRepeat()
     # sender4.retrans_seq_no()
+    base = 1
+    tester = {1: 11, 2: 22, 3: 33, 4: 44, 5: 55, 6: 66, 7 : 77}
+
+    for t in range(base, base+5):
+        print(tester[t])
