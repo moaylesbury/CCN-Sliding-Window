@@ -10,10 +10,12 @@ def increment_seq_no(s):
 
 class Sender2(Sender):
     def __init__(self):
+        # inherit super self variables
         super(Sender2, self).__init__()
 
     def ReceiveAck(self, client_socket, timeout_time):
-
+        # Input:  self, client_socket, timeout_time
+        # Output: 
 
         ready = select.select([client_socket], [], [], timeout_time)
 
