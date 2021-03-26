@@ -7,7 +7,7 @@ import time
 class Sender3(Sender2):
     def __init__(self):
         super(Sender3, self).__init__()
-        self.retry_timeout = float(sys.argv[4])    # milliseconds to seconds
+        self.retry_timeout = float(sys.argv[4])/1000    # milliseconds to seconds
         self.window_size = int(sys.argv[5])
 
     def increment_seq_no(self, seq_no):
@@ -31,7 +31,7 @@ class Sender3(Sender2):
         base = 0
         next_seq_no = 0
         t0 = 0
-
+        begin_time = time.time()
 
         while not eof:
             received = False
@@ -80,6 +80,9 @@ class Sender3(Sender2):
             print("d")
             if self.EOF == (1).to_bytes(1, 'big'):  # TODO: can only end if this is acknowledged
                 eof = True
+
+        time_elapsed = time.time() - begin_time
+        print(self.fileSize / time_elapsed)
 
 if __name__ == "__main__":
     sender3 = Sender3()

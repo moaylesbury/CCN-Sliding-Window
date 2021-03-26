@@ -1,6 +1,7 @@
 from socket import *
 import sys
 import time
+import os
 
 
 class Sender:
@@ -11,6 +12,7 @@ class Sender:
         self.sequenceNumber = (0).to_bytes(2, 'big')
         self.EOF = (0).to_bytes(1, 'big')
         self.bufferSize = 1024
+        self.fileSize = os.stat(self.fileName).st_size / 1024     # output is in bytes, so divide by 1024 for output in kilobytes
 
     def increment_seq(self):
         return (int.from_bytes(self.sequenceNumber, 'big') + 1).to_bytes(2, 'big')
@@ -47,7 +49,7 @@ class Sender:
 
         client_socket.sendto(packet, (self.remoteHost, int(self.serverPort)))
 
-        time.sleep(0.025)
+        time.sleep(0.025) # TODO: this is important, probably put into one to prevent buffer overload.
 
         self.sequenceNumber = self.increment_seq()
 

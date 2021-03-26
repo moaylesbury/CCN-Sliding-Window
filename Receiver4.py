@@ -1,9 +1,11 @@
 from Receiver3 import Receiver3
 from socket import *
+import sys
 
 class Receiver4(Receiver3):
     def __init__(self):
         super(Receiver4, self).__init__()
+        self.window_size = int(sys.argv[3])
 
     def shuffle_buffer(self, buffer):
         for i in range(self.window_size):

@@ -40,7 +40,9 @@ class Sender2(Sender):
         seq_no = 0
         ack_seq_no = None
         counter = 0
+        begin_time = time.time()
         eof = False
+        retransmissions = 0
 
         while not eof:
             print("EOF: ", self.EOF)
@@ -86,12 +88,14 @@ class Sender2(Sender):
                 print("+++++++++++++++++++++++")
                 print("     retransmitted     ")
                 print("+++++++++++++++++++++++")
+                retransmissions += 1
                 pass
             else:
                 if ack_seq_num == 1:
                     print("+++++++++++++++++++++++")
                     print("     retransmitted     ")
                     print("+++++++++++++++++++++++")
+                    retransmissions += 1
                     pass
                 else:
                     time_elapsed = time.time() - t0  # successful, change seqno
@@ -103,7 +107,9 @@ class Sender2(Sender):
 
 
         client_socket.close()
-
+        print("final data")
+        time_elapsed = time.time() - begin_time
+        print(retransmissions, self.fileSize / time_elapsed)
 
 
 

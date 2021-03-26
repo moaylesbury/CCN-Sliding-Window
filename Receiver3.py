@@ -5,7 +5,7 @@ import sys
 class Receiver3(Receiver2):
     def __init__(self):
         super(Receiver3, self).__init__()
-        self.window_size = int(sys.argv[3])
+        # self.window_size = int(sys.argv[3])
 
 
     def GoBackN(self):

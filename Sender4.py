@@ -39,6 +39,8 @@ class Sender4(Sender3):
         # for i in range(self.window_size):
         #     timers.append(0)
 
+        begin_time = time.time()
+
         while not eof:
             print(timers)
             ack_seq_no = -1
@@ -76,7 +78,8 @@ class Sender4(Sender3):
                         self.sequenceNumber = t.to_bytes(2, 'big')
                         sender4.send(client_socket, img_byte_arr[t])
                         print("RESENT: ", int.from_bytes(self.sequenceNumber, "big"))
-                        resent.append(int.from_bytes(self.sequenceNumber, "big"))
+                        if int.from_bytes(self.sequenceNumber, "big") not in resent:
+                            resent.append(int.from_bytes(self.sequenceNumber, "big"))
                         tpos.append(t)
 
 
@@ -103,6 +106,9 @@ class Sender4(Sender3):
 
             if self.EOF == (1).to_bytes(1, 'big'):  # TODO: can only end if this is acknowledged
                 eof = True
+
+        time_elapsed = time.time() - begin_time
+        print(self.fileSize / time_elapsed)
 
 if __name__ == "__main__":
     sender4 = Sender4()
