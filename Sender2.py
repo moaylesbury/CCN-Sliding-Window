@@ -1,3 +1,5 @@
+# Michael Aylesbury s1751472
+
 from Sender1 import Sender
 from socket import *
 import time
@@ -15,7 +17,7 @@ class Sender2(Sender):
 
     def ReceiveAck(self, client_socket, timeout_time):
         # Input:  self, client_socket, timeout_time
-        # Output: 
+        # Output:
 
         ready = select.select([client_socket], [], [], timeout_time)
 
@@ -32,88 +34,83 @@ class Sender2(Sender):
             return seq_num, False       # as timed out
 
     def StopAndWait(self):
+        # Input:  self
+        # Output:
+
+        # create UDP client socket
         client_socket = socket(AF_INET, SOCK_DGRAM)
 
+        # form image bytes
         img_byte_arr = sender2.form_image_bytes()
 
-        time_elapsed = 0
-        timeout_time = 0.02  # starting with 2xRTT=2x10ms=20ms
+        # initialise stop and wait variables
+        time_elapsed = 0            # time elapsed
+        timeout_time = 0.02         # time before packet times out, 2xRTT=2x10ms=20ms
+        seq_no = 0                  # packet sequence number
+        counter = 0                 # counter to track packets sent
+        begin_time = time.time()    # begininning time of initial transmission of file
+        eof = False                 # end of file flag
+        retransmissions = 0         # number of retransmissions
 
-        seq_no = 0
-        ack_seq_no = None
-        counter = 0
-        begin_time = time.time()
-        eof = False
-        retransmissions = 0
-
+        # while not received end of file flag
         while not eof:
-            print("EOF: ", self.EOF)
 
-
+            # initialise timeout to false
             timeout = False
-
-            print("=======================")
-            print("COUNT:")
-            print(counter)
-            print("=======================")
-
-            # send packet and start timer
+            # set self sequence number to the variable seq_no, in bytes
             self.sequenceNumber = seq_no.to_bytes(2, 'big')
-
-            print("packet sent")
-
+            # send countherth packet with self.sequenceNumber
             sender2.send(client_socket, img_byte_arr[counter])
 
+            # start timer
             t0 = time.time()
 
+            # initialise ack sequence number as None
             ack_seq_num = None
+
             # loop until an ack is received or timer times out
-            while ack_seq_num is None and not timeout: # TODO: make this integrate better with RcvAck
+            while ack_seq_num is None and not timeout:
+
+                # calculate time elapsed
                 time_elapsed = time.time() - t0
-                print("waiting")
 
+                # if timeout then set time out to True and break out of the loop
                 if time_elapsed >= timeout_time:
-                    print("timeout")
                     timeout = True
-                    break
+                    break           # TODO: move this below the rcv?
 
-                print("Time Elapsed: ", time_elapsed)
+                # call ReceiveAck to return an ack sequence number and a timeout boolean
+                ack_seq_num, timeout = sender2.ReceiveAck(client_socket, timeout_time)
 
-                ack_seq_num, timeout = sender2.ReceiveAck(client_socket, timeout_time)  # TODO: may need to catch socket error and return None
-
-
-
-                print(ack_seq_num, timeout, time.time()-t0)
-            print("timeout: ", timeout)
-            # if timeout resent
+            # if timeout then do nothing and packet is resent on next loop
             if timeout:
-                print("+++++++++++++++++++++++")
-                print("     retransmitted     ")
-                print("+++++++++++++++++++++++")
+                # increment retransmissions
                 retransmissions += 1
                 pass
             else:
+                # if incorrect ack sequence number then do nothing and packet is resent on next loop
                 if ack_seq_num == 1:
-                    print("+++++++++++++++++++++++")
-                    print("     retransmitted     ")
-                    print("+++++++++++++++++++++++")
+                    # increment retransmissions
                     retransmissions += 1
                     pass
+                # otherwise the correct ack paket has been received
                 else:
-                    time_elapsed = time.time() - t0  # successful, change seqno
+                    # increment sequence number
                     seq_no = increment_seq_no(seq_no)
+                    # increment counter
                     counter += 1
 
+            # check if EOF flag is 1, if so set eof True
             if self.EOF == (1).to_bytes(1, 'big'):
                 eof = True
 
-
+        # close client socket
         client_socket.close()
-        print("final data")
+        # calculated elapsed time
         time_elapsed = time.time() - begin_time
+
+        # print throughput: file size / time taken to send file
         print(retransmissions, self.fileSize / time_elapsed)
-
-
 
 
 if __name__ == "__main__":

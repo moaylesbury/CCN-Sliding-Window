@@ -1,3 +1,5 @@
+# Michael Aylesbury s1751472
+
 from Sender3 import Sender3
 from socket import *
 import time
@@ -5,6 +7,7 @@ import time
 class Sender4(Sender3):
     
     def __init__(self):
+        # inherit super self variables
         super(Sender4, self).__init__()
 
     def shuffle_buffer(self, timers):

@@ -1,3 +1,5 @@
+# Michael Aylesbury s1751472
+
 from socket import *
 import sys
 import time
@@ -7,9 +9,9 @@ import os
 class Sender:
     def __init__(self):
         # initialising self variables
-        self.remoteHost = sys.argv[1]                           # address for socket
-        self.serverPort = sys.argv[2]                           # port number for socket
-        self.fileName = sys.argv[3]                             # name of file to be transferred
+        self.remoteHost = sys.argv[1]                           # address for socket from input
+        self.serverPort = sys.argv[2]                           # port number for socket from input
+        self.fileName = sys.argv[3]                             # name of file to be transferred from input
         self.sequenceNumber = (0).to_bytes(2, 'big')            # sequence number for transferred packet, initialised as 0
         self.EOF = (0).to_bytes(1, 'big')                       # end of file flag, 0 if not EOF, 1 otherwise
         self.bufferSize = 1024                                  # buffer size
