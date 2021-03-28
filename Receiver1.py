@@ -16,7 +16,6 @@ class Receiver:
 
         # receive packet and client address from socket
         packet, self.clientAddress = server_socket.recvfrom(4000)
-
         # parse packet
         sequence_number = packet[0:2]
         eof = packet[2:3]

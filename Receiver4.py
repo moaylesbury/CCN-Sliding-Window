@@ -22,45 +22,46 @@ class Receiver4(Receiver3):
         server_socket = socket(AF_INET, SOCK_DGRAM)
         server_socket.bind(("", int(self.serverPort)))
 
-        # initialising buffer
-        buffer = []
+
         data_buffer = {}
-        for i in range(self.window_size):
-            buffer.append(0)
-        #######
+
         base = 0
 
-        seq_nos_received = []
 
-        expected_seq_no = 0
+        to_remove = []
+
         data = None
         self.EOF = (0).to_bytes(1, "big")
 
         while self.EOF == (0).to_bytes(1, "big"):
-            print("expected seq no: ", expected_seq_no)
             print("base: ", base)
-            print("seq nos received: ", seq_nos_received)
-
+            print("seq nos received: ", data_buffer.keys())
+            print("")
+            print("")
+            print("|-         waiting...         -|")
             img_bytes, seq_no = receiver4.Receive(server_socket)
             seq_no = int.from_bytes(seq_no, 'big')
-            buffer[seq_no % self.window_size] = img_bytes
             data_buffer[seq_no] = img_bytes
             receiver4.SendAck(server_socket, seq_no)
 
-            if seq_no not in seq_nos_received:
-                seq_nos_received.append(seq_no)
+
 
             print("RECIEVED : : : ", seq_no)
 
-
-            while base in seq_nos_received:
+            while base in data_buffer.keys() and base < base + self.window_size - 1:
+                to_remove.append(base)
                 data = receiver4.append_data(data, data_buffer[base])
-                buffer = receiver4.shuffle_buffer(buffer)
                 base += 1
 
+            print(data_buffer.keys())
 
+            # # doing some cleaning
+            #
+            # for key in to_remove:
+            #     if key in data_buffer.keys():
+            #         del data_buffer[key]
 
-        # write to file        TODO: does this need to be a separate function
+        # write to file
         f = open(self.fileName, "w+b")
         f.write(bytearray(data))
 
