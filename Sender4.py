@@ -56,49 +56,58 @@ class Sender4(Sender3):
         # while not received end of file flag
         while not eof:
             ack_seq_no = -1
-
+            try:
+                ack_pack, server_address = client_socket.recvfrom(8000)
+                ack_seq_no = ack_pack[0:2]
+                ack_seq_no = int.from_bytes(ack_seq_no, 'big')
+                if ack_seq_no not in acks_received:
+                    acks_received.append(ack_seq_no)
+                if ack_seq_no == base:
+                    while base in acks_received:
+                        base += 1
+            except error:
+                pass
             print("")
             print("")
             print("|-         base=%s         -|" % base)
+            print("|-         next sequence number=%s         -|" % next_seq_no)
             print("")
             print("-----acks received-----")
             print(acks_received)
             print("a")
+            # if base <= next_seq_no < base + self.window_size:   # TODO: remember to modulo
             if base <= next_seq_no < base + self.window_size:   # TODO: remember to modulo
                 self.sequenceNumber = next_seq_no.to_bytes(2, 'big')
                 print("*sending: ", next_seq_no)
                 sender4.send(client_socket, img_byte_arr[next_seq_no])
                 timers[next_seq_no] = time.time()
                 next_seq_no += 1
-            print("b")
             for t in timers.keys():
                 if base <= t < base + self.window_size:
                     if time.time() - timers[t] >= self.retry_timeout and timers[t] != 0:
                         print("+++++timeout+++++")
                         print("thus resending %s" % t)
-                        timers[t] = time.time()
+
                         self.sequenceNumber = t.to_bytes(2, 'big')
                         sender4.send(client_socket, img_byte_arr[t])
+                        timers[t] = time.time()
                 else:
                     to_remove.append(t)
-            print("c")
+
+
+
+
             # doing some cleaning up to save cpu
             if len(to_remove) > 0:
                 for t in to_remove:
                     if t in timers.keys():
                         del timers[t]
             print("d")
-            try:
-                ack_pack, server_address = client_socket.recvfrom(4000)
-                ack_seq_no = ack_pack[0:2]
-                ack_seq_no = int.from_bytes(ack_seq_no, 'big')
-                if ack_seq_no not in acks_received:
-                    acks_received.append(ack_seq_no)
-                while base in acks_received:
-                    base += 1
-            except error:
-                pass
-            print("e")
+
+
+
+            # print("c")
+            # print("e")
 
 
             # time.sleep(2)
@@ -116,3 +125,6 @@ if __name__ == "__main__":
     # test = sender4.shuffle_buffer(arr)
     # print(test)
     sender4.SelectiveRepeat()
+    # print(4 <= 8 < 4 + 5 - 1)
+    # 4 <= 8 < 4 + 5 - 1
+    # 4 <  8 < 8

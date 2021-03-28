@@ -15,7 +15,7 @@ class Receiver:
     def Receive(self, server_socket):
 
         # receive packet and client address from socket
-        packet, self.clientAddress = server_socket.recvfrom(4000)
+        packet, self.clientAddress = server_socket.recvfrom(8000)
         # parse packet
         sequence_number = packet[0:2]
         eof = packet[2:3]

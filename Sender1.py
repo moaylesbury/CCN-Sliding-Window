@@ -64,7 +64,7 @@ class Sender:
         client_socket.sendto(packet, (self.remoteHost, int(self.serverPort)))
 
         # briefly sleep to prevent buffer overflow on receiver end
-        time.sleep(0.025)
+        # time.sleep(0.025)
 
         # increment sequence number
         self.sequenceNumber = self.increment_seq()

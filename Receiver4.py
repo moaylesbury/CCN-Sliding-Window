@@ -41,17 +41,33 @@ class Receiver4(Receiver3):
             print("|-         waiting...         -|")
             img_bytes, seq_no = receiver4.Receive(server_socket)
             seq_no = int.from_bytes(seq_no, 'big')
-            data_buffer[seq_no] = img_bytes
             receiver4.SendAck(server_socket, seq_no)
+            data_buffer[seq_no] = img_bytes
+
+            if base <= seq_no < base + self.window_size - 1:
+
+                # in order
+                if seq_no == base:
+                    while base in data_buffer.keys() and base < base + self.window_size - 1:
+                        to_remove.append(base)
+                        data = receiver4.append_data(data, data_buffer[base])
+                        base += 1
+
+                # out of order
+                else:
+                    data_buffer[seq_no] = img_bytes
+
+
+
 
 
 
             print("RECIEVED : : : ", seq_no)
 
-            while base in data_buffer.keys() and base < base + self.window_size - 1:
-                to_remove.append(base)
-                data = receiver4.append_data(data, data_buffer[base])
-                base += 1
+            # while base in data_buffer.keys() and base < base + self.window_size - 1:
+            #     to_remove.append(base)
+            #     data = receiver4.append_data(data, data_buffer[base])
+            #     base += 1
 
             print(data_buffer.keys())
 
