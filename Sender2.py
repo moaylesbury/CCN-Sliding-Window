@@ -5,7 +5,7 @@ from socket import *
 import time
 import select
 
-# extending Sender
+
 def increment_seq_no(s):
     return 0 if s == 1 else 1
 

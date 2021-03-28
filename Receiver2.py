@@ -3,12 +3,14 @@
 from Receiver1 import Receiver
 from socket import *
 
+
 def increment_seq_no(s):
     return 0 if s == 1 else 1
 
-# extending Receiver
+
 class Receiver2(Receiver):
     def __init__(self):
+        # inherit super self variables
         super(Receiver2, self).__init__()
 
     def SendAck(self, server_socket, state):
@@ -17,25 +19,30 @@ class Receiver2(Receiver):
         # make sure not none
         # server_socket.sendto(ack_pack, (self.clientAddress[0], int(self.serverPort)))
         server_socket.sendto(ack_pack, self.clientAddress)
-        print(self.serverPort)
 
     def StopAndWait(self):
+        # create UDP server socket
         server_socket = socket(AF_INET, SOCK_DGRAM)
+        # bind socket to server port
         server_socket.bind(("", int(self.serverPort)))
 
-        print("The server is ready to receive")
-
+        # initialise counter to 0
         counter = 0
+        # initialise data to None
         data = None
+        # initialise seq_no to 0
         seq_no = 0
+        # initialise EOF to 0
         self.EOF = (0).to_bytes(1, "big")
-        # while not self.EOF:v
+
+        # while not received end of file flag
         while self.EOF == (0).to_bytes(1, "big"):
+            # initialise img_bytes to None
             img_bytes = None
 
-            # receive packet and extract data and sequence number
+            # loop until img_bytes are received
             while img_bytes is None:
-
+                # receive packet and extract data and sequence number
                 img_bytes, sequence_number = receiver2.Receive(server_socket)
 
 
@@ -44,21 +51,18 @@ class Receiver2(Receiver):
                 data = receiver2.append_data(data, img_bytes)
                 receiver2.SendAck(server_socket, seq_no)
                 seq_no = increment_seq_no(seq_no)
-                print("correct packet")
             else:
+                # otherwise send ack for the correct sequence number
                 receiver2.SendAck(server_socket, increment_seq_no(seq_no))
 
-
-
-
-        print("HOST RECVD: ", counter, " PACKETS")
-
-
-        # write to file        TODO: does this need to be a separate function
+        # open file to write bytes
         f = open(self.fileName, "w+b")
+        # write bytearray of data to file
         f.write(bytearray(data))
 
+        # close file
         f.close()
+        # close socket
         server_socket.close()
 
 

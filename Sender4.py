@@ -4,6 +4,7 @@ from Sender3 import Sender3
 from socket import *
 import time
 
+
 class Sender4(Sender3):
     
     def __init__(self):
@@ -23,13 +24,21 @@ class Sender4(Sender3):
         # self.sequenceNumber = (next_seq_no + (t - (next_seq_no % self.window_size))).to_bytes(2, 'big')
 
     def SelectiveRepeat(self):
+
+        # create UDP client socket
         client_socket = socket(AF_INET, SOCK_DGRAM)
+        # set socket blocking to false
+        # this stops the recvfrom function from waiting until a packet is received, and instead just checks
         client_socket.setblocking(False)
-        img_byte_arr = sender4.form_image_bytes()   # TODO: len approx 880
+
+        # form image bytes
+        img_byte_arr = sender4.form_image_bytes()
 
         eof = False
         base = 0
         next_seq_no = 0
+
+        to_remove = []
 
         ## for testing
         resent = []
@@ -44,14 +53,10 @@ class Sender4(Sender3):
 
         begin_time = time.time()
 
+        # while not received end of file flag
         while not eof:
             print(timers)
             ack_seq_no = -1
-            print("sequence number: ", next_seq_no)
-            print("base number    : ", base)
-            print("RESENT PACKETS: ", resent)
-            print("T POS: ", tpos)
-            print("ACKS RECEIVED: ", acks_received)
 
             # sendpacket
             # -if between base and base + window size
@@ -68,22 +73,23 @@ class Sender4(Sender3):
             # - if any timer has expired
             # --resend packet with corresponding sequence number
             # --start its timer
-            print(len(timers))
-            print(timers)
+            # print(len(timers))
             for t in timers.keys():
 
                 if t >= base and t < base + self.window_size:
                     if time.time() - timers[t] >= self.retry_timeout and timers[t] != 0:
                         print("+++++timeout+++++")
                         timers[t] = time.time()
-                        # sender4.retrans_seq_no(t, next_seq_no) # changes sequence number
-                        # sender4.send(client_socket, img_byte_arr[next_seq_no - 1 - (self.window_size - t)]) # -1?
                         self.sequenceNumber = t.to_bytes(2, 'big')
                         sender4.send(client_socket, img_byte_arr[t])
-                        print("RESENT: ", int.from_bytes(self.sequenceNumber, "big"))
-                        if int.from_bytes(self.sequenceNumber, "big") not in resent:
-                            resent.append(int.from_bytes(self.sequenceNumber, "big"))
-                        tpos.append(t)
+                else:
+                    to_remove.append(t)
+
+            # doing some cleaning up to save cpu
+            if len(to_remove) > 0:
+                for t in to_remove:
+                    if t in timers.keys():
+                        del timers[t]
 
 
 
@@ -91,21 +97,18 @@ class Sender4(Sender3):
                 ack_pack, server_address = client_socket.recvfrom(4000)
                 ack_seq_no = ack_pack[0:2]
                 ack_seq_no = int.from_bytes(ack_seq_no, 'big')
-                print("=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-")
-                print("ACK SQN: ", ack_seq_no, " NEXT SQN - 1: ", next_seq_no)
-                print("=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-=-=-=-=-=--=-=-=--=-=-=-=-")
                 if ack_seq_no not in acks_received:
                     acks_received.append(ack_seq_no)
 
-                while base in acks_received:
-                    base += 1
+                # while base in acks_received:
+                #     base += 1
             except error:
                 pass
 
+            while base in acks_received:
+                base += 1
 
-
-
-
+            # time.sleep(5)
 
             if self.EOF == (1).to_bytes(1, 'big'):  # TODO: can only end if this is acknowledged
                 eof = True
@@ -115,5 +118,7 @@ class Sender4(Sender3):
 
 if __name__ == "__main__":
     sender4 = Sender4()
+    # arr = [0, 1, 2, 3, 4]
+    # test = sender4.shuffle_buffer(arr)
+    # print(test)
     sender4.SelectiveRepeat()
-    # sender4.retrans_seq_no()
