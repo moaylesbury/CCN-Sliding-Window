@@ -116,8 +116,8 @@ class Sender4(Sender3):
                 eof = True
 
         time_elapsed = time.time() - begin_time
-        print(time_elapsed)
-        # print(self.fileSize / time_elapsed)
+        # print throughput: file size / time taken to send file
+        print(round(self.fileSize / time_elapsed, 2))
 
 if __name__ == "__main__":
     sender4 = Sender4()

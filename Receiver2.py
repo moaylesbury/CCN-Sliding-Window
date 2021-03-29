@@ -2,7 +2,7 @@
 
 from Receiver1 import Receiver
 from socket import *
-
+import math
 
 def increment_seq_no(s):
     return 0 if s == 1 else 1
@@ -39,21 +39,21 @@ class Receiver2(Receiver):
         while self.EOF == (0).to_bytes(1, "big"):
             # initialise img_bytes to None
             img_bytes = None
+            print("|-     seq no=%s     -|" % seq_no)
 
-            # loop until img_bytes are received
-            while img_bytes is None:
-                # receive packet and extract data and sequence number
-                img_bytes, sequence_number = receiver2.Receive(server_socket)
-
-
+            # receive packet and extract data and sequence number
+            img_bytes, sequence_number = receiver2.Receive(server_socket)
+            print("received %s" % int.from_bytes(sequence_number, "big"))
             # if the sequence number is not correct, send ack for the opposite
             if seq_no == int.from_bytes(sequence_number, "big"):
                 data = receiver2.append_data(data, img_bytes)
+                print("correct send ack for %s" % int.from_bytes(sequence_number, "big"))
                 receiver2.SendAck(server_socket, seq_no)
                 seq_no = increment_seq_no(seq_no)
             else:
                 # otherwise send ack for the correct sequence number
                 receiver2.SendAck(server_socket, increment_seq_no(seq_no))
+                print("INCORRECT send ack for %s" % int.from_bytes(sequence_number, "big"))
 
         receiver2.WriteDataCloseSocket(data, server_socket)
 

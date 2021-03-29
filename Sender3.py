@@ -107,7 +107,7 @@ class Sender3(Sender2):
         time_elapsed = time.time() - begin_time
 
         # print throughput: file size / time taken to send file
-        print(self.fileSize / time_elapsed)
+        print(round(self.fileSize / time_elapsed, 2))
 
 if __name__ == "__main__":
     sender3 = Sender3()

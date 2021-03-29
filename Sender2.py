@@ -22,7 +22,6 @@ class Sender2(Sender):
         ready = select.select([client_socket], [], [], timeout_time)
 
         ack_pack = None
-        print(ready)
         if ready[0]:
             ack_pack, server_address = client_socket.recvfrom(4000)
 
@@ -39,6 +38,9 @@ class Sender2(Sender):
 
         # create UDP client socket
         client_socket = socket(AF_INET, SOCK_DGRAM)
+        # set socket blocking to false
+        # this stops the recvfrom function from waiting until a packet is received, and instead just checks
+        client_socket.setblocking(False)
 
         # form image bytes
         img_byte_arr = sender2.form_image_bytes()
@@ -51,47 +53,47 @@ class Sender2(Sender):
         begin_time = time.time()    # begininning time of initial transmission of file
         eof = False                 # end of file flag
         retransmissions = 0         # number of retransmissions
-
+        send = True
         # while not received end of file flag
         while not eof:
 
             # initialise timeout to false
             timeout = False
-            # set self sequence number to the variable seq_no, in bytes
-            self.sequenceNumber = seq_no.to_bytes(2, 'big')
-            # send countherth packet with self.sequenceNumber
-            sender2.send(client_socket, img_byte_arr[counter])
 
-            # start timer
-            t0 = time.time()
+
+            if send:
+                # set self sequence number to the variable seq_no, in bytes
+                self.sequenceNumber = seq_no.to_bytes(2, 'big')
+                # send countherth packet with self.sequenceNumber
+                sender2.send(client_socket, img_byte_arr[counter])
+                # start timer
+                t0 = time.time()
+                send = False
+
+
 
             # initialise ack sequence number as None
             ack_seq_num = None
 
-            # loop until an ack is received or timer times out
-            while ack_seq_num is None and not timeout:
+            if time.time() - t0 >= timeout_time:
+                timeout = True
 
-                # calculate time elapsed
-                time_elapsed = time.time() - t0
-
-                # if timeout then set time out to True and break out of the loop
-                if time_elapsed >= timeout_time:
-                    timeout = True
-                    break           # TODO: move this below the rcv?
-
-                # call ReceiveAck to return an ack sequence number and a timeout boolean
-                ack_seq_num, timeout = sender2.ReceiveAck(client_socket, timeout_time)
+            try:
+                ack_pack, server_address = client_socket.recvfrom(4000)
+                ack_seq_num = ack_pack[0:2]
+                ack_seq_num = int.from_bytes(ack_seq_num, "big")
+            except error:
+                pass
 
             # if timeout then do nothing and packet is resent on next loop
             if timeout:
+                send = True
                 # increment retransmissions
                 retransmissions += 1
-                pass
             else:
                 # if incorrect ack sequence number then do nothing and packet is resent on next loop
-                if ack_seq_num == 1:
+                if ack_seq_num != seq_no:
                     # increment retransmissions
-                    retransmissions += 1
                     pass
                 # otherwise the correct ack paket has been received
                 else:
@@ -99,6 +101,7 @@ class Sender2(Sender):
                     seq_no = increment_seq_no(seq_no)
                     # increment counter
                     counter += 1
+                    send = True
 
             # check if EOF flag is 1, if so set eof True
             if self.EOF == (1).to_bytes(1, 'big'):
@@ -110,7 +113,7 @@ class Sender2(Sender):
         time_elapsed = time.time() - begin_time
 
         # print throughput: file size / time taken to send file
-        print(retransmissions, self.fileSize / time_elapsed)
+        print(retransmissions, round(self.fileSize / time_elapsed, 2))
 
 
 if __name__ == "__main__":
