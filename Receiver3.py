@@ -42,15 +42,7 @@ class Receiver3(Receiver2):
                 # otherwise send ack from expected sequence number - 1
                 receiver3.SendAck(server_socket, expected_seq_no-1)
 
-        # open file to write bytes
-        f = open(self.fileName, "w+b")
-        # write bytearray of data to file
-        f.write(bytearray(data))
-
-        # close file
-        f.close()
-        # close socket
-        server_socket.close()
+        receiver3.WriteDataCloseSocket(data, server_socket)
 
 
 if __name__ == "__main__":

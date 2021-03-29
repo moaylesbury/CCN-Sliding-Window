@@ -55,15 +55,7 @@ class Receiver2(Receiver):
                 # otherwise send ack for the correct sequence number
                 receiver2.SendAck(server_socket, increment_seq_no(seq_no))
 
-        # open file to write bytes
-        f = open(self.fileName, "w+b")
-        # write bytearray of data to file
-        f.write(bytearray(data))
-
-        # close file
-        f.close()
-        # close socket
-        server_socket.close()
+        receiver2.WriteDataCloseSocket(data, server_socket)
 
 
 if __name__ == "__main__":

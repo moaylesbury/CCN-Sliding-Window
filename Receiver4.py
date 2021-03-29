@@ -77,12 +77,7 @@ class Receiver4(Receiver3):
             #     if key in data_buffer.keys():
             #         del data_buffer[key]
 
-        # write to file
-        f = open(self.fileName, "w+b")
-        f.write(bytearray(data))
-
-        f.close()
-        server_socket.close()
+        receiver4.WriteDataCloseSocket(data, server_socket)
 
 
 

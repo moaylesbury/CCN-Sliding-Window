@@ -38,6 +38,17 @@ class Receiver:
         # return data
         return data
 
+    def WriteDataCloseSocket(self, data, socket):
+        # open file to write bytes
+        f = open(self.fileName, "w+b")
+        # write bytearray of data to file
+        f.write(bytearray(data))
+
+        # close file
+        f.close()
+        # close socket
+        socket.close()
+
     def BasicFramework(self):
         # create UDP server socket
         server_socket = socket(AF_INET, SOCK_DGRAM)
@@ -56,15 +67,9 @@ class Receiver:
             # append image bytes to data
             receiver.append_data(data, image_bytes)
 
-        # open file to write bytes
-        f = open(self.fileName, "w+b")
-        # write bytearray of data to file
-        f.write(bytearray(data))
+        receiver.WriteDataCloseSocket(data, server_socket)
 
-        # close file
-        f.close()
-        # close socket
-        server_socket.close()
+
 
 
 if __name__ == "__main__":
